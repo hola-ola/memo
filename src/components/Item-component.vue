@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 
 const props = defineProps({
   sign: {
-    type: Number,
+    type: String,
     default: null
+  },
+  uncovered: {
+    type: Boolean,
+    default: false,
   }
 })
 </script>
 
 <template>
   <div class="item">
-    <p>{{ sign }}</p>
+    <p v-if="uncovered">{{ sign }}</p>
   </div>
 </template>
 
@@ -24,4 +27,5 @@ const props = defineProps({
     color: #170a1c;
   }
 }
+
 </style>

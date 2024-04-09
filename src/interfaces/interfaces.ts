@@ -1,4 +1,4 @@
-export interface Player {
-  name: string
-  points: number
+export interface GameItem {
+  uncovered: boolean;
+  value: string;
 }

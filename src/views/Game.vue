@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import ItemComponent from '@/components/Item-component.vue'
+import type {GameItem} from "@/interfaces/interfaces";
 
 const winner = ref<string | null>(null)
 const isTie = ref<boolean>(false)
@@ -10,57 +11,95 @@ const currentPlayer = ref('Player 1')
 const player1Points = 0
 const player2Points = 0
 
-let items = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8];
-const itemOne = ref(null)
-const itemTwo = ref(null)
+let items = ref([] as GameItem[]);
+const uncoveredItems = ref([] as number[])
 const counter = ref(0);
 
 const startGame = function () {
-  console.log("startGame")
-  // Shuffle the items array
-  const copyItems = [...items];
-  const shuffled = [];
+  const array = ["1", "1", "2", "2", "3", "3", "4", "4", "5", "5", "6", "6", "7", "7", "8", "8"];
+  const shuffled = [] as GameItem[];
 
   for (let i = 16; i > 0; i--) {
     // Get random number between 0 and 15 using Math.random => that's the index of random element
-    const index = Math.floor(Math.random() * 15+1);
+    const index = Math.floor(Math.random() * i);
     // Get that element from items array and push it to shuffled
-    shuffled.push(items[index]);
+    const item = {
+      uncovered: false,
+      value: array[index]
+    } as GameItem;
+    shuffled.push(item);
     // Remove that element from the items array;
-    copyItems.splice(index, 1)
+    array.splice(index, 1)
   }
-  console.log("shuffled", shuffled)
+
   counter.value +=1;
-  items = shuffled;
+  items.value = shuffled;
 }
 
-const compareItems = function () {
-  // Compare itemOne and item2
-  // If they are the same then currentPlayer gets a point and plays again
-  // If they are different then currentPlayer gets no point and it's other player turn
+const setPoints = function (player: string) {
+  // Assigns points to currentPlayer
 }
 
-const setPoints = function () {
+const nextPlayer = function (player: string) {
   // Assigns points to currentPlayer
 }
 
 const checkGameOver = function () {
   // Checks if there are some unmatched items or if there's less than 8 points
-  // If game is over, check for tie
-  // If game is not over, currentPlayer switches
+  // If game is over, check for tie/winner
 }
 
 const reset = function () {
   // Resets game values to start over
 }
 
-const startPlaying = function () {
-  // Submits players' names and sets current player
+const uncoverItem = function (index: number) {
+  // Change the value of "uncovered" of selected item
+  items.value[index].uncovered = true;
+  // Then push new item to uncoveredItems
+  uncoveredItems.value.push(index);
+
+  // If there are two items in uncoveredItems – compare them
+  if (uncoveredItems.value.length === 2) {
+    compareItems();
+  }
 }
 
-const view = function () {
-  // Views items value
+const compareItems = function () {
+  // Compare uncovered items
+  const indexItem1 = uncoveredItems.value[0];
+  const indexItem2 = uncoveredItems.value[1];
+
+  const item1 = items.value[indexItem1].value;
+  const item2 = items.value[indexItem2].value;
+  const match = item1 === item2;
+  if (match) {
+    // If they are the same then:
+    // currentPlayer gets a point and plays again
+    setPoints(currentPlayer.value as string);
+    // The cards should remain uncovered // TODO: take the cards away from the board
+    // Check for game over
+    checkGameOver();
+  }
 }
+
+const nextRound = function () {
+  nextPlayer(currentPlayer.value as string);
+  // The cards are covered again
+  const indexItem1 = uncoveredItems.value[0];
+  const indexItem2 = uncoveredItems.value[1];
+  console.log("uncoveredItems", uncoveredItems.value)
+
+  console.log("indexItem1", indexItem1)
+
+  items.value[indexItem1].uncovered = false;
+  items.value[indexItem2].uncovered = false;
+  uncoveredItems.value = [];
+}
+
+onMounted( () => {
+  startGame();
+});
 </script>
 
 <template>
@@ -71,10 +110,10 @@ const view = function () {
     <span v-else-if="winner">{{ winner }} won!</span>
   </p>
   <p v-else>Now playing: {{ currentPlayer }}</p>
-  {{ items }}
+  <button class="button" @click="nextRound">Next player!</button>
   <div class="game">
     <div v-for="(item, index) in items" class="item">
-      <item-component :key="index" :sign="item" @click="view" />
+      <item-component :key="index" :sign="item.value" :uncovered="item.uncovered" @click="uncoverItem(index)"/>
     </div>
   </div>
 
@@ -88,7 +127,7 @@ h1 {
 }
 
 p {
-  @apply text-base my-10;
+  @apply text-base mt-10;
   color: #0b7189;
 }
 .game {
@@ -104,7 +143,7 @@ p {
   }
 }
 .button {
-  @apply border-0 rounded-full px-8 py-4 mt-10 text-base;
+  @apply border-0 rounded-full px-8 py-4 my-10 text-base cursor-pointer;
   background-color: #228cdb;
   color: #170a1c;
 }
