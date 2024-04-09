@@ -1,6 +1,7 @@
 {
   "name": "memo",
   "version": "0.0.0",
+  "homepage": "https://hola-ola.github.io/memo/",
   "private": true,
   "type": "module",
   "scripts": {
